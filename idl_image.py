@@ -1,11 +1,9 @@
 from __future__ import division
-import matplotlib.pyplot as plt
 import numpy as np
-import os
-from matplotlib import gridspec
+import os,glob
 from functions import *
-from astropy.convolution import convolve, Box1DKernel
-
+import functions
+import pickle
 
 """
 The following code allows a user to set a time and thus calculate the positions of the satellites
@@ -14,8 +12,9 @@ to python and then an image of the disk at that time is obtained, along with a p
 which part of the ring is being surveyed by the satellites for the given time
 """
 
-time = '2009-06-07'	#date on which the circumsolar ring is observed, in yyyy/mm/dd format, dd can be decimal
-sat = 'B' 	#takes the argument A or B
+sat = 'A' 	#takes the argument A or B
+beta = '0.05' 	#the ratio of radiation forces to gravitational force, a measure of particle size
+time = '2009-06-12'	#date on which the circumsolar ring is observed, in yyyy/mm/dd format, dd can be decimal
 
 calc_ephem(time)
 
@@ -23,86 +22,6 @@ calc_ephem(time)
 #and the tangent point one is looking at through the satellite
 tangent_a = stereo_a.hlon-np.arctan(0.72/np.sqrt((stereo_a.sun_distance**2)-(0.72**2)))
 tangent_b = stereo_b.hlon+np.arctan(0.72/np.sqrt((stereo_b.sun_distance**2)-(0.72**2)))
-
-if (sat == 'A'):
-	filein = 'volimage.dat'
-	fileout = 'output.sav'
-	a = stereo_a.sun_distance
-	e = STEREO_A.ecc
-	i = STEREO_A.inc
-	ilng = -60	
-	flng = -35
-	asc = princ_range(STEREO_A.asc-(ven.hlon*(180/np.pi)))		
-	wbar = princ_range(STEREO_A.wbar-(ven.hlon*(180/np.pi))) 	
-	inter_long = (stereo_a.hlon-ven.hlon)*(180/np.pi)
-	meanlong = princ_range(inter_long)			#rel angle: venus-sun-sat angle
-	long1 = inter_long + 180 + ilng
-	long2 = inter_long + 180 + flng
-
-elif (sat == 'B'):
-	filein = 'volimage.dat'
-	fileout = 'output.sav'
-	a = stereo_b.sun_distance
-	e = STEREO_B.ecc
-	i = STEREO_B.inc
-	ilng = 35
-	flng = 60
-	asc = princ_range(STEREO_B.asc-(ven.hlon*(180/np.pi)))
-	wbar = princ_range(STEREO_B.wbar-(ven.hlon*(180/np.pi))) 
-	inter_long = (stereo_b.hlon-ven.hlon)*(180/np.pi)
-	meanlong = princ_range(inter_long)			#rel angle: venus-sun-sat angle
-	long1 = inter_long + 180 + ilng
-	long2 = inter_long + 180 + flng
-
-output = losint_image(filein,fileout,a,e,i,asc,wbar,meanlong,lon1=long1,lon2=long2)
-
-image = output[0]
-lg = output[1]
-lat = output[2]
-
-filter_width = 13      #assign the filter width in pixels/cells
-model_filtered = np.zeros((len(image),len(image[0])))
-for i in range(0,len(image)):
-	model_filtered[i] = convolve(image[i,:],Box1DKernel(filter_width))
-
-fig = plt.figure(figsize=(15,8))
-gs = gridspec.GridSpec(5,3)
-ax1 = fig.add_subplot(gs[0,0])
-ax1.plot(np.linspace(ilng,flng,50),np.average(image,0))
-plt.locator_params(axis='y',nbins=5)
-plt.setp(ax1.get_xticklabels(),visible=False)
-ax1.set_title('Raw Image')
-ax2 = fig.add_subplot(gs[1:5,0],sharex=ax1)
-im = ax2.imshow(image,origin='lower',extent=(ilng,flng,lat[0],lat[-1]),aspect='auto')
-ax2.set_xlabel('Helioecliptic Longitude')
-ax2.set_ylabel('Helioecliptic Latitude')
-plt.colorbar(im,orientation='horizontal')
-
-ax3 = fig.add_subplot(gs[0,1])
-ax3.plot(np.linspace(ilng,flng,50),np.average(model_filtered,0))
-plt.locator_params(axis='y',nbins=5)
-plt.setp(ax3.get_xticklabels(),visible=False)
-ax3.set_title('Boxcar Filter')
-ax4 = fig.add_subplot(gs[1:5,1],sharex=ax3)
-im2 = ax4.imshow(model_filtered,origin='lower',extent=(ilng,flng,lat[0],lat[-1]),aspect='auto')
-ax4.set_xlabel('Helioecliptic Longitude')
-ax4.set_ylabel('Helioecliptic Latitude')
-plt.colorbar(im2,orientation='horizontal')
-
-final_image = np.subtract(image,model_filtered)
-ax5 = fig.add_subplot(gs[0,2])
-ax5.plot(np.linspace(ilng+3,flng-3,38),np.average(final_image[:,6:44],0))
-plt.locator_params(axis='y',nbins=5)
-plt.setp(ax5.get_xticklabels(),visible=False)
-ax5.set_title('Final Image')
-ax6 = fig.add_subplot(gs[1:5,2],sharex=ax5)
-im3 = ax6.imshow(final_image[:,6:44],origin='lower',extent=(ilng+3,flng-3,lat[0],lat[-1]),aspect='auto')
-ax6.set_xlabel('Helioecliptic Longitude')
-ax6.set_ylabel('Helioecliptic Latitude')
-plt.colorbar(im3,orientation='horizontal')
-
-os.chdir('/home/yc367/Desktop/Test/Output')
-plt.savefig(time+'_'+sat+'.png')
 
 plt.figure(figsize=(7,4))
 venus, = plt.polar(ven.hlon,ven.sun_distance,'o',color='y')
@@ -116,3 +35,61 @@ plt.title(time)
 plt.ylim([0,1.2])
 plt.tight_layout()
 plt.savefig(time+'_'+'Positions.png')
+
+if (sat == 'A'):
+	filein = 'volimage.dat'
+	fileout = 'output.sav'
+	a = STEREO_A.a
+	e = STEREO_A.ecc
+	i = STEREO_A.inc
+	ilng = -180	
+	flng = 180
+	asc = princ_range(STEREO_A.asc-(ven.hlon*(180/np.pi)))		
+	wbar = princ_range(STEREO_A.wbar-(ven.hlon*(180/np.pi))) 	
+	true_long = (stereo_a.hlon-ven.hlon)*(180/np.pi)
+	meanlong = calc_meanlong(true_long,wbar,e)	
+	long1 = true_long + 180 + ilng
+	long2 = true_long + 180 + flng
+
+elif (sat == 'B'):
+	filein = 'volimage.dat'
+	fileout = 'output.sav'
+	a = stereo_b.sun_distance
+	e = STEREO_B.ecc
+	i = STEREO_B.inc
+	ilng = -180
+	flng = 180
+	asc = princ_range(STEREO_B.asc-(ven.hlon*(180/np.pi)))
+	wbar = princ_range(STEREO_B.wbar-(ven.hlon*(180/np.pi))) 
+	true_long = (stereo_b.hlon-ven.hlon)*(180/np.pi)
+	meanlong = calc_meanlong(true_long,wbar,e)				
+	long1 = true_long + 180 + ilng
+	long2 = true_long + 180 + flng
+
+output = losint_image(filein,fileout,a,e,i,asc,wbar,meanlong,lon1=long1,lon2=long2)
+
+image = output[0]
+lng = output[1]
+lat = output[2]
+lg = np.linspace(ilng,flng,50)
+vgridsize = len(image)
+hgridsize = len(image[0])
+
+data_files = pickle.load(open(time+'.p','rb'))
+IV = data_files['pl']
+
+pl_added = np.zeros((vgridsize,hgridsize))
+
+for i in range(0,len(image)):
+    pl = (1/float(beta))*IV[i,0]*np.power(np.absolute(lg),IV[i,1]) 	#need to change the premultiplication factor for different beta (either scale it up or create each case for beta
+    pl_added[i] = np.add(image[i],pl)
+
+output = process_image(pl_added,vgridsize,hgridsize,lg)
+
+inter_pl_added = np.subtract(pl_added,output[0])
+inter_pl_image = np.subtract(output[1],output[2])
+final_image2 = np.subtract(inter_pl_added,inter_pl_image)
+
+output_file = time+'_'+sat+'_'+beta
+plot_output(final_image,vgridsize,lg,ilng,flng,lat[0],lat[-1],output_file)
+plot_diagnostics(pl_added,output[0],output[1],output[2],inter_pl_added,inter_pl_image,final_image,vgridsize,lg,ilng,flng,output[3],output_file)
