@@ -158,14 +158,3 @@ plt.savefig('Analysed')
 plt.xticks(x,tx,rotation='vertical')
 plt.annotate('Venus Circumsolar Ring',xy=(0.65,0.71),xycoords='axes fraction')
 plt.annotate('Venus Circumsolar Ring',xy=(0.65,0.26),xycoords='axes fraction')"""
-
-
-i = 233
-plt.figure()
-plt.polar(hae_ven[i],ven_a[i],'o')
-plt.polar(hEcl_Lon_stereo_a[i],stereoa_a[i],'o')
-plt.polar(hEcl_Lon_stereo_b[i],stereob_a[i],'o')
-plt.polar(hae_ven,ven_a,linewidth=0.5)
-plt.polar(hEcl_Lon_stereo_a,stereoa_a,linewidth=0.5)
-plt.polar(hEcl_Lon_stereo_b,stereob_a,linewidth=0.5)
-plt.title(str(time[i]))
