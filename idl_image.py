@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 from matplotlib import gridspec
-from functions_idl_image import *
+from functions import *
 from astropy.convolution import convolve, Box1DKernel
 
 
