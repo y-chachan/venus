@@ -5,7 +5,7 @@ pro ring_image,filein,fileout,a,e,i,asc,wbar,meanlong,nlon=nlon,nlat=nlat,lon1=l
   IF ~ KEYWORD_SET(nstep) then nstep = 200
           
   ;; get model file
-  filein = 'volimage.dat'
+  filein = filein
 
   ;; radius and simple P(r) array, STEREO observe scattered light
   nr = 100
