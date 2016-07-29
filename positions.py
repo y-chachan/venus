@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib import gridspec
 from matplotlib.ticker import AutoMinorLocator
 import matplotlib.patches as mpatches
-from calc_position import *
+from functions import *
 
 #path2 = '/home/yc367/Desktop/Positions_ephem'  
 #os.chdir(path2)
