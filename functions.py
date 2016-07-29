@@ -11,13 +11,6 @@ from subprocess import Popen,PIPE
 from scipy.io import readsav
 from os import remove
 from os.path import isfile
-from matplotlib import ticker
-
-def calc_meanlong(true_long,wbar,e):
-	f = (true_long-wbar)*(np.pi/180)
-	E = 2*np.arctan(np.tan(f/2)*np.sqrt((1-e)/(1+e)))
-	M = E - e*np.sin(E)
-	return M*(180/np.pi) + wbar
 
 def process_image(medianed_image,vgridsize,hgridsize,lg,filter_width=13):
     # define your function for leastsq to obtain initial value estimates:
@@ -55,18 +48,15 @@ def plot_output(final_image,vgridsize,lg,ilng,flng,ilat,flat,output_file,filter_
     gs = gridspec.GridSpec(5,6)
     ax1 = fig.add_subplot(gs[0,0:4])
     ax1.plot(lg[cut:-cut],mean_scan[cut:-cut])
+    ax2 = fig.add_subplot(gs[1:5,0:4],sharex=ax1)
     ax1.set_title('Mean Scan')
     ax1.set_ylabel('DN s$^{-1}$pix$^{-1}$')
     ax1.hlines(0,ilng,flng,linestyles='dashed',color = '0.75')
     plt.setp(ax1.get_xticklabels(), visible=False)
-    ax2 = fig.add_subplot(gs[1:5,0:4],sharex=ax1)
     im = ax2.imshow(final_image[:,6:44],origin='lower',aspect='auto',extent=(ilng+3,flng-3,ilat,flat))
     ax2.set_xlabel('Helioecliptic Longitude')
     ax2.set_ylabel('Helioecliptic Latitude')
-    cb = plt.colorbar(im,ax=ax2,orientation='horizontal')
-    tick_locator = ticker.MaxNLocator(nbins=6)
-    cb.locator = tick_locator
-    cb.update_ticks()
+    plt.colorbar(im,ax=ax2,orientation='horizontal')
     ax3 = fig.add_subplot(gs[0:5,4:6])
     for i in range(0,vgridsize):
         ax3.plot(lg,np.add(final_image[i,:],i/5))
@@ -91,7 +81,7 @@ def plot_diagnostics(image,data_filtered,pl_image,smooth_pl,inter_image,inter_pl
         plt.locator_params(axis='y',nbins=5)    
         if i < 1:
             ax1.set_title('Raw Images')
-            plt.legend([a,b,c,d], ['Input', 'Input boxcar', 'Power Law','Power Law boxcar'],bbox_to_anchor=(0, 2.0, 1., .102),loc=9,
+            plt.legend([a,b,c,d], ['Data', 'Data boxcar', 'Power Law','Power Law boxcar'],bbox_to_anchor=(0, 2.0, 1., .102),loc=9,
                borderaxespad=0.)
         ax2 = fig3.add_subplot(gs3[i,1],sharex=ax1)
         [e,f,g] = ax2.plot(lg,inter_image[i,:],lg,inter_pl[i,:],lg,final_image[i,:])

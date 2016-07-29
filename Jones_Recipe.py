@@ -9,8 +9,8 @@ path1 = 'C:/Users/YaChan/Desktop'   #output folder
 path2 = 'Y:/IoA Summer Project/STEREO/B'    #input folder
 fold_names = [x[0] for x in os.walk(path)]
 length = len(fold_names)
-l1 = 2
-for l1 in range(2,3):    
+l1 = 1
+for l1 in range(1,length):    
     path = fold_names[l1]   #input data
     output_file = os.path.relpath(path,start=path2)
     os.chdir(path2)
