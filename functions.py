@@ -11,6 +11,13 @@ from subprocess import Popen,PIPE
 from scipy.io import readsav
 from os import remove
 from os.path import isfile
+from matplotlib import ticker
+
+def calc_meanlong(true_long,wbar,e):
+	f = (true_long-wbar)*(np.pi/180)
+	E = 2*np.arctan(np.tan(f/2)*np.sqrt((1-e)/(1+e)))
+	M = E - e*np.sin(E)
+	return M*(180/np.pi) + wbar
 
 def process_image(medianed_image,vgridsize,hgridsize,lg,filter_width=13):
     # define your function for leastsq to obtain initial value estimates:
