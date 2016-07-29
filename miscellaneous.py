@@ -141,3 +141,46 @@ plt.ylabel('Helioecliptic Longitude (degrees)')
 plt.xlim([h_dist[0],h_dist[-1]])
 plt.title('STEREO '+sat)
 plt.savefig('Long vs Dist_'+sat)
+
+#plot data for different beta from the radial.dat file obtained from selfdisk_andrew
+beta_arr = np.array([0.1,0.075,0.05,0.025,0.01,0.005])
+
+radial = np.zeros((6,3000,2))
+fig = plt.figure(figsize=(5.5,20))
+gs = gridspec.GridSpec(6,1)
+
+for i in range(0,len(beta_arr)):
+	os.chdir('/home/yc367/Desktop/Archive/Disk_STEREO_images/'+str(beta_arr[i])) 	#path to input files
+	radial[i] = np.loadtxt('radial.dat')
+	ax = fig.add_subplot(gs[i,0])
+	ax.scatter((radial[i])[:,0],(radial[i])[:,1],marker='.')
+	plt.setp(ax.get_xticklabels(),visible=False)
+	plt.title(r'$\beta$ ='+str(beta_arr[i]))
+	plt.vlines(0.72,min((radial[i])[:,1]),max((radial[i])[:,1]),linestyles='dashed',color='0.75')
+	plt.ylim(0,max((radial[i])[:,1]))
+plt.setp(ax.get_xticklabels(),visible=True)
+plt.xlabel('Distance from Sun (AU)')
+os.chdir('/home/yc367/Desktop')
+plt.savefig('radial.png')
+
+#a plot to show where Venus and the satellites are at the given time
+#and the tangent point one is looking at through the satellite
+time = '2013-04-15'
+calc_ephem(time)
+tangent_a = stereo_a.hlon-np.arctan(0.72/np.sqrt((stereo_a.sun_distance**2)-(0.72**2)))
+tangent_b = stereo_b.hlon+np.arctan(0.72/np.sqrt((stereo_b.sun_distance**2)-(0.72**2)))
+
+plt.figure(figsize=(7,4))
+venus, = plt.polar(ven.hlon,ven.sun_distance,'o',color='y')
+a, = plt.polar(stereo_a.hlon,stereo_a.sun_distance,'o',color='b')
+tan_a, = plt.polar(tangent_a,0.72,'s',color='b')
+b, = plt.polar(stereo_b.hlon,stereo_b.sun_distance,'o',color='r')
+tan_b, = plt.polar(tangent_b,0.72,'s',color='r')
+plt.polar(np.linspace(0,2*np.pi),[0.72]*50,linestyle='dashed',color='y')
+plt.legend([venus,a,tan_a,b,tan_b],['Venus','STEREO A','a','STEREO B','b'],loc=(1.1,0.35),numpoints=1)
+plt.title(time)
+plt.ylim([0,1.2])
+plt.tight_layout()
+plt.savefig(time+'_'+'Positions.png')
+
+
